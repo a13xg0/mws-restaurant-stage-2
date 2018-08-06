@@ -19,12 +19,15 @@ self.addEventListener('install', function (event) {
                 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.css',
                 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.js',
                 'https://unpkg.com/leaflet@1.3.1/dist/images/marker-icon.png',
-                'https://unpkg.com/leaflet@1.3.1/dist/images/marker-shadow.png'
+                'https://unpkg.com/leaflet@1.3.1/dist/images/marker-shadow.png',
+                '/img/icons-512.png',
+                '/img/icons-192.png'
             ]);
 
             // cache critical resources
             return cache.addAll([
                 '/',
+                '/manifest.json',
                 '/index.html',
                 '/restaurant.html',
                 '/js/idb.js',

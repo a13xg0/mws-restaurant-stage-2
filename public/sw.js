@@ -27,12 +27,12 @@ self.addEventListener('install', function (event) {
                 '/',
                 '/index.html',
                 '/restaurant.html',
+                '/js/idb.js',
                 '/js/main.js',
                 '/js/dbhelper.js',
                 '/js/picturehelper.js',
                 '/js/restaurant_info.js',
-                '/css/styles.css',
-                '/data/restaurants.json'
+                '/css/styles.css'
             ]);
         }, function (msg) {
             console.log(msg);

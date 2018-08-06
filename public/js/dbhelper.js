@@ -13,6 +13,26 @@ class DBHelper {
     }
 
     /**
+     *  Open IndexDB database connection
+     *
+     * @return {*}
+     */
+    static openDatabase() {
+        // If the browser doesn't support service worker,
+        // we don't care about having a database
+        if (!navigator.serviceWorker) {
+            return Promise.resolve();
+        }
+
+        return idb.open('rest2', 1, function(upgradeDb) {
+            let store = upgradeDb.createObjectStore('restaurants', {
+                keyPath: 'id'
+            });
+            //store.createIndex('by-date', 'time');
+        });
+    }
+
+    /**
      * Fetch all restaurants.
      */
     static fetchRestaurants(callback) {
@@ -24,11 +44,26 @@ class DBHelper {
                 // cache images
                 PictureHelper.forwardCacheImages(restaurants);
 
+                // cache restaurants
+                restaurants.forEach((restaurant) => {
+                    DBHelper.storeRestaurantData(restaurant);
+                });
+
                 callback(null, restaurants);
             })
             .catch((msg) => {
-                const error = (`Request failed. Returned status of ${msg}`);
-                callback(error, null);
+                // probably network failure, let's try to fetch data from IndexDB
+                DBHelper.openDatabase().then((db) => {
+                    let tx = db.transaction('restaurants');
+                    let store = tx.objectStore('restaurants');
+                    store.getAll().then((restaurants) => {
+                        // successful IndexDB response
+                        callback(null, restaurants);
+                    }).catch((msg) => {
+                        const error = (`Request failed. Returned status of ${msg}`);
+                        callback(error, null);
+                    });
+                });
             })
     }
 
@@ -46,12 +81,36 @@ class DBHelper {
                 }
             })
             .then((restaurant) => {
+                DBHelper.storeRestaurantData(restaurant);
                 callback(null, restaurant);
             })
             .catch((msg) => {
-                const error = (`Request failed. Returned status of ${msg}`);
-                callback(error, null);
+                // probably network failure, let's try to fetch data from IndexDB
+                DBHelper.openDatabase().then((db) => {
+                    let tx = db.transaction('restaurants');
+                    let store = tx.objectStore('restaurants');
+                    store.get(parseInt(id)).then((restaurant) => {
+                        // successful IndexDB response
+                        callback(null, restaurant);
+                    }).catch((msg) => {
+                        const error = (`Request failed. Returned status of ${msg}`);
+                        callback(error, null);
+                    });
+                });
             })
+    }
+
+    static storeRestaurantData(restaurant) {
+        // save restaurant in DB
+        DBHelper.openDatabase().then(function(db) {
+            if (!db) return;
+
+            var tx = db.transaction('restaurants', 'readwrite');
+            var store = tx.objectStore('restaurants');
+            //messages.forEach(function (message) {
+                store.put(restaurant);
+            //});
+        })
     }
 
     /**
